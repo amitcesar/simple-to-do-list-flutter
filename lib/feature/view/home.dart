@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:todo_list/core/shared/app_colors.dart';
+import 'package:todo_list/core/widgets/myLogoTodoApp.dart';
+import 'package:todo_list/core/widgets/separator.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -9,8 +11,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final int createdtasksCount = 0;
-  final int completedtasksCount = 0;
+  int createdtasksCount = 0;
+  int completedtasksCount = 0;
   List<String> tasks = [];
 
   @override
@@ -19,24 +21,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
         appBar: AppBar(
-          backgroundColor: AppColors.gray_700,
-          toolbarHeight: 170,
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Image.asset(
-                'assets/icons/rocket.png',
-              ),
-              Image.asset(
-                'assets/icons/to.png',
-              ),
-              Image.asset(
-                'assets/icons/do.png',
-              ),
-            ],
-          ),
-        ),
+            backgroundColor: AppColors.gray_700,
+            toolbarHeight: 170,
+            title: myLogoTodoApp()),
         body: Container(
           height: screenHeight,
           decoration: const BoxDecoration(
@@ -48,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 addNewTask(),
                 infoTasks(),
-                taskSeparator(),
+                separator(),
                 Expanded(
                   child: TaskList(tasks: tasks),
                 ),
@@ -57,86 +44,84 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ));
   }
-}
 
-Widget addNewTask() {
-  return Row(
-    children: [
-      Expanded(
-        child: Container(
-          margin: const EdgeInsets.only(
-            right: 5,
+  Widget addNewTask() {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            margin: const EdgeInsets.only(
+              right: 5,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.gray_400,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: TextField(
+              decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.only(left: 16),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        width: 0,
+                        style: BorderStyle.none,
+                      )),
+                  hintText: 'Adicione uma nova tarefa',
+                  hintStyle: const TextStyle(
+                      fontSize: 16.0, color: AppColors.gray_300)),
+              onSubmitted: (text) {
+                setState(() {
+                  tasks.add(text);
+                  createdtasksCount++;
+                });
+              },
+            ),
           ),
-          decoration: BoxDecoration(
-            color: AppColors.gray_400,
-            borderRadius: BorderRadius.circular(10),
+        ),
+        ElevatedButton(
+          onPressed: () {},
+          style: ElevatedButton.styleFrom(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6.0)),
+            backgroundColor: AppColors.blueDark,
+            minimumSize: const Size(50, 50),
           ),
-          child: TextField(
-            decoration: InputDecoration(
-                contentPadding: const EdgeInsets.only(left: 16),
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      width: 0,
-                      style: BorderStyle.none,
-                    )),
-                hintText: 'Adicione uma nova tarefa',
-                hintStyle:
-                    const TextStyle(fontSize: 16.0, color: AppColors.gray_300)),
+          child: const Text(
+            '+',
+            style: TextStyle(fontSize: 18, color: AppColors.white),
           ),
+        )
+      ],
+    );
+  }
+
+  Widget infoTasks() {
+    return Padding(
+      padding: const EdgeInsets.all(2.0),
+      child: Container(
+        margin: const EdgeInsets.only(top: 22),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            StatusText(
+              label: 'Criadas ',
+              count: 0,
+              labelColor: AppColors.blue,
+              backgroundColor: AppColors.gray_400,
+              countColor: AppColors.gray_200,
+            ),
+            StatusText(
+              label: 'Concluídas ',
+              count: 0,
+              labelColor: AppColors.purple,
+              backgroundColor: AppColors.gray_400,
+              countColor: AppColors.gray_200,
+            ),
+          ],
         ),
       ),
-      ElevatedButton(
-        onPressed: () {},
-        style: ElevatedButton.styleFrom(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.0)),
-          backgroundColor: AppColors.blueDark,
-          minimumSize: const Size(50, 50),
-        ),
-        child: const Text(
-          '+',
-          style: TextStyle(fontSize: 18, color: AppColors.white),
-        ),
-      )
-    ],
-  );
-}
-
-Widget infoTasks() {
-  return Padding(
-    padding: const EdgeInsets.all(2.0),
-    child: Container(
-      margin: const EdgeInsets.only(top: 22),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          StatusText(
-            label: 'Criadas ',
-            count: 0,
-            labelColor: AppColors.blue,
-            backgroundColor: AppColors.gray_400,
-            countColor: AppColors.gray_200,
-          ),
-          StatusText(
-            label: 'Concluídas ',
-            count: 0,
-            labelColor: AppColors.purple,
-            backgroundColor: AppColors.gray_400,
-            countColor: AppColors.gray_200,
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-Widget taskSeparator() {
-  return Container(
-    margin: const EdgeInsets.only(top: 20),
-    decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.gray_300, width: 1.0))),
-  );
+    );
+  }
 }
 
 class StatusText extends StatelessWidget {
@@ -197,10 +182,13 @@ class TaskList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (tasks.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
           'Você ainda não tem tarefas cadastradas',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: AppColors.gray_300),
         ),
       );
     } else {
