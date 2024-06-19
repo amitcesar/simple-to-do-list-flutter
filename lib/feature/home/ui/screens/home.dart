@@ -124,9 +124,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget infoTasks() {
     final tasks = _manageTasks.getTasks();
-    final createdtasksCount = tasks.length;
-    final completedTasksCount =
-        tasks.where((tasks) => tasks.isCompleted).length;
+    final createdTasksCount = tasks.length;
+    final completedTasksCount = tasks.where((task) => task.isCompleted).length;
 
     return Padding(
       padding: const EdgeInsets.all(2.0),
@@ -137,7 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             StatusText(
               label: 'Criadas ',
-              count: createdtasksCount,
+              count: createdTasksCount,
               labelColor: AppColors.blue,
               backgroundColor: AppColors.gray_400,
               countColor: AppColors.gray_200,
