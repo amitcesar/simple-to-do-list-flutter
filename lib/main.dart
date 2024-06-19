@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:todo_list/feature/view/home.dart';
+import 'package:todo_list/feature/home/ui/screens/home.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Flutter Demo',
+        title: 'My To Do List',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
