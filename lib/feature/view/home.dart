@@ -14,6 +14,9 @@ class _HomeScreenState extends State<HomeScreen> {
   int createdtasksCount = 0;
   int completedtasksCount = 0;
   List<String> tasks = [];
+  List<bool> tasksCompletionStatus = [];
+
+  TextEditingController newTaskInput = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +40,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 infoTasks(),
                 separator(),
                 Expanded(
-                  child: TaskList(tasks: tasks),
+                  child: TaskList(
+                      tasks: tasks,
+                      tasksCompletionStatus: tasksCompletionStatus,
+                      onDelete: (index) {
+                        setState(() {
+                          tasks.removeAt(index);
+                          tasksCompletionStatus.removeAt(index);
+                          createdtasksCount--;
+                        });
+                      },
+                      onCheckboxChanged: (index, value) {
+                        tasksCompletionStatus[index] = value!;
+                        completedtasksCount = tasksCompletionStatus
+                            .where((status) => status)
+                            .length;
+                      }),
                 ),
               ],
             ),
@@ -58,6 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
               borderRadius: BorderRadius.circular(10),
             ),
             child: TextField(
+              controller: newTaskInput,
               decoration: InputDecoration(
                   contentPadding: const EdgeInsets.only(left: 16),
                   border: OutlineInputBorder(
@@ -72,6 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onSubmitted: (text) {
                 setState(() {
                   tasks.add(text);
+                  tasksCompletionStatus.add(false);
                   createdtasksCount++;
                 });
               },
@@ -79,7 +99,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         ElevatedButton(
-          onPressed: () {},
+          onPressed: () {
+            _addNewTask(newTaskInput.text);
+          },
           style: ElevatedButton.styleFrom(
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(6.0)),
@@ -93,6 +115,17 @@ class _HomeScreenState extends State<HomeScreen> {
         )
       ],
     );
+  }
+
+  void _addNewTask(String newTask) {
+    if (newTask.isNotEmpty) {
+      setState(() {
+        tasks.add(newTask);
+        tasksCompletionStatus.add(false);
+        createdtasksCount++;
+        newTaskInput.clear();
+      });
+    }
   }
 
   Widget infoTasks() {
@@ -177,12 +210,20 @@ class StatusText extends StatelessWidget {
 class TaskList extends StatelessWidget {
   final List<String> tasks;
 
-  TaskList({required this.tasks});
+  final List<bool> tasksCompletionStatus;
+  final Function(int) onDelete;
+  final Function(int, bool?) onCheckboxChanged;
+
+  TaskList(
+      {required this.tasks,
+      required this.tasksCompletionStatus,
+      required this.onDelete,
+      required this.onCheckboxChanged});
 
   @override
   Widget build(BuildContext context) {
     if (tasks.isEmpty) {
-      return Center(
+      return const Center(
         child: Text(
           'Você ainda não tem tarefas cadastradas',
           style: TextStyle(
@@ -195,11 +236,65 @@ class TaskList extends StatelessWidget {
       return ListView.builder(
         itemCount: tasks.length,
         itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(tasks[index]),
+          return TaskCard(
+            taskTitle: tasks[index],
+            isCompleted: false,
+            onCheckboxChanged: (bool? value) {
+              onCheckboxChanged(index, value);
+            },
+            onDelete: () {
+              onDelete(index);
+            },
           );
         },
       );
     }
+  }
+}
+
+class TaskCard extends StatelessWidget {
+  final String taskTitle;
+  final bool isCompleted;
+  final Function(bool?)? onCheckboxChanged;
+  final Function()? onDelete;
+
+  TaskCard({
+    required this.taskTitle,
+    this.isCompleted = false,
+    this.onCheckboxChanged,
+    this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 5.0),
+      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+      decoration: BoxDecoration(
+        color: AppColors.gray_400,
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+      child: Row(
+        children: [
+          Checkbox(
+            value: isCompleted,
+            onChanged: onCheckboxChanged,
+          ),
+          Expanded(
+            child: Text(
+              taskTitle,
+              style: TextStyle(
+                fontSize: 16.0,
+                decoration: isCompleted ? TextDecoration.lineThrough : null,
+              ),
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.delete),
+            onPressed: onDelete,
+          ),
+        ],
+      ),
+    );
   }
 }
