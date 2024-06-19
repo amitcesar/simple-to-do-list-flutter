@@ -15,11 +15,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // int createdtasksCount = 0;
-  // int completedtasksCount = 0;
-  // List<String> tasks = [];
-  // List<bool> tasksCompletionStatus = [];
-
   final ManageTasks _manageTasks = ManageTasks(TaskRepositoryImpl());
   TextEditingController newTaskInput = TextEditingController();
 
@@ -50,23 +45,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   tasks: _manageTasks.getTasks(),
                   onDelete: (index) {
                     setState(() {
-                      // tasks.removeAt(index);
-                      // tasksCompletionStatus.removeAt(index);
-                      // createdtasksCount--;
-                      // completedtasksCount = tasksCompletionStatus
-                      //     .where((status) => status)
-                      //     .length;
-
                       _manageTasks.removeTask(index);
                     });
                   },
                   onCheckboxChanged: (index, value) {
                     setState(() {
-                      // tasksCompletionStatus[index] = value!;
-                      // completedtasksCount = tasksCompletionStatus
-                      //     .where((status) => status)
-                      //     .length;
-
                       _manageTasks.updateTaskStatus(index, value!);
                     });
                   },
@@ -133,11 +116,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void _addNewTask(String newTask) {
     if (newTask.isNotEmpty) {
       setState(() {
-        // tasks.add(newTask);
-        // tasksCompletionStatus.add(false);
-        // createdtasksCount++;
-        // newTaskInput.clear();
-
         _manageTasks.addTask(newTask);
         newTaskInput.clear();
       });
