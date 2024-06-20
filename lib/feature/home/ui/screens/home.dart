@@ -1,22 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:todo_list/core/shared/app_colors.dart';
 import 'package:todo_list/core/widgets/myLogoTodoApp.dart';
 import 'package:todo_list/core/widgets/separator.dart';
-import 'package:todo_list/feature/home/data/repositories/task_repository.impl.dart';
-import 'package:todo_list/feature/home/domain/usecases/manage_tasks.dart';
+import 'package:todo_list/feature/home/ui/bloc/task_bloc.dart';
 import 'package:todo_list/feature/home/ui/widgets/status_text.dart';
 import 'package:todo_list/feature/home/ui/widgets/task_list.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class HomeScreen extends StatelessWidget {
+  HomeScreen({super.key});
 
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  final ManageTasks _manageTasks = ManageTasks(TaskRepositoryImpl());
-  TextEditingController newTaskInput = TextEditingController();
+  // final ManageTasks _manageTasks = ManageTasks(TaskRepositoryImpl());
+  final TextEditingController newTaskInput = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -28,41 +23,46 @@ class _HomeScreenState extends State<HomeScreen> {
         toolbarHeight: 170,
         title: myLogoTodoApp(),
       ),
-      body: Container(
-        height: screenHeight,
-        decoration: const BoxDecoration(
-          color: AppColors.gray_600,
-        ),
+      body: BlocProvider(
+        create: (context) => TaskBloc()..add(LoadTasksEvent()),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-          child: Column(
-            children: [
-              addNewTask(),
-              infoTasks(),
-              separator(),
-              Expanded(
-                child: TaskList(
-                  tasks: _manageTasks.getTasks(),
-                  onDelete: (index) {
-                    setState(() {
-                      _manageTasks.removeTask(index);
-                    });
-                  },
-                  onCheckboxChanged: (index, value) {
-                    setState(() {
-                      _manageTasks.updateTaskStatus(index, value!);
-                    });
-                  },
-                ),
-              ),
-            ],
+          height: screenHeight,
+          decoration: const BoxDecoration(
+            color: AppColors.gray_600,
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+            child: Column(
+              children: [
+                addNewTask(context),
+                infoTasks(context),
+                separator(),
+                Expanded(child:
+                    BlocBuilder<TaskBloc, TaskState>(builder: (context, state) {
+                  if (state is TaskUpdatedState) {
+                    return TaskList(
+                      tasks: state.tasks,
+                      onDelete: (index) {
+                        context.read<TaskBloc>().add(RemoveTaskEvent(index));
+                      },
+                      onCheckboxChanged: (index, value) {
+                        context
+                            .read<TaskBloc>()
+                            .add(UpdateTaskStatusEvent(index, value!));
+                      },
+                    );
+                  }
+                  return Center(child: CircularProgressIndicator());
+                })),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget addNewTask() {
+  Widget addNewTask(BuildContext context) {
     return Row(
       children: [
         Expanded(
@@ -88,14 +88,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     const TextStyle(fontSize: 16.0, color: AppColors.gray_300),
               ),
               onSubmitted: (text) {
-                _addNewTask(text);
+                _addNewTask(context, text);
               },
             ),
           ),
         ),
         ElevatedButton(
           onPressed: () {
-            _addNewTask(newTaskInput.text);
+            _addNewTask(context, newTaskInput.text);
           },
           style: ElevatedButton.styleFrom(
             shape: RoundedRectangleBorder(
@@ -113,44 +113,49 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _addNewTask(String newTask) {
+  void _addNewTask(BuildContext context, String newTask) {
     if (newTask.isNotEmpty) {
-      setState(() {
-        _manageTasks.addTask(newTask);
-        newTaskInput.clear();
-      });
+      context.read<TaskBloc>().add(AddTaskEvent(newTask));
+      newTaskInput.clear();
     }
   }
 
-  Widget infoTasks() {
-    final tasks = _manageTasks.getTasks();
-    final createdTasksCount = tasks.length;
-    final completedTasksCount = tasks.where((task) => task.isCompleted).length;
+  Widget infoTasks(BuildContext context) {
+    return BlocBuilder<TaskBloc, TaskState>(
+      builder: (context, state) {
+        if (state is TaskUpdatedState) {
+          final createdTasksCount = state.tasks.length;
+          final completedTasksCount =
+              state.tasks.where((task) => task.isCompleted).length;
 
-    return Padding(
-      padding: const EdgeInsets.all(2.0),
-      child: Container(
-        margin: const EdgeInsets.only(top: 22),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            StatusText(
-              label: 'Criadas ',
-              count: createdTasksCount,
-              labelColor: AppColors.blue,
-              backgroundColor: AppColors.gray_400,
-              countColor: AppColors.gray_200,
+          return Padding(
+            padding: const EdgeInsets.all(2.0),
+            child: Container(
+              margin: const EdgeInsets.only(top: 22),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  StatusText(
+                    label: 'Criadas ',
+                    count: createdTasksCount,
+                    labelColor: AppColors.blue,
+                    backgroundColor: AppColors.gray_400,
+                    countColor: AppColors.gray_200,
+                  ),
+                  StatusText(
+                    label: 'Concluídas ',
+                    count: completedTasksCount,
+                    labelColor: AppColors.purple,
+                    backgroundColor: AppColors.gray_400,
+                    countColor: AppColors.gray_200,
+                  ),
+                ],
+              ),
             ),
-            StatusText(
-              label: 'Concluídas ',
-              count: completedTasksCount,
-              labelColor: AppColors.purple,
-              backgroundColor: AppColors.gray_400,
-              countColor: AppColors.gray_200,
-            ),
-          ],
-        ),
-      ),
+          );
+        }
+        return Container();
+      },
     );
   }
 }
